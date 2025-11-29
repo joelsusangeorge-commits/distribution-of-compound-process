@@ -1,85 +1,106 @@
-# Compound Poisson Process Simulation Using R Shiny
+# Compound Poisson–Gamma Simulation Shiny Application
 
-This repository contains an R Shiny application that simulates and visualizes a Compound Poisson–Exponential process of the form:
+This repository contains an R Shiny application that simulates the compound Poisson process defined as:
 
-S(t) = X₁ + X₂ + ... + Xₙ , where N(t) denotes the number of events up to time t.
+S(t) = X₁ + X₂ + ... + Xₙ(t)
 
-The model assumptions are:
+where:
 
-- N(t) follows a Poisson process with rate λ
-- Xᵢ are independent exponential random variables with rate μ
-- N(t) and Xᵢ are independent processes
+- N(t) is a Poisson process with rate λ
+- Xᵢ are i.i.d. exponential random variables with rate μ
+- N(t) and Xᵢ are independent
 
-The purpose of the application is to study the distribution of S(t), generate simulated realizations, visualize histograms, and explore the sensitivity of the model with respect to λ, μ, and time. The Shiny interface allows live experimentation and comparison across time scales.
-
----
-
-## Mathematical Foundation
-
-### Distribution of Event Count N(t)
-If interarrival times are exponential with rate λ, then:
-
-N(t) follows a Poisson distribution with mean λt.
-
-### Conditional Distribution of S(t)
-Given N(t) = n:
-
-S(t) represents the sum of n exponential(μ) random variables, which implies it follows a Gamma distribution with:
-
-- shape parameter = n  
-- rate parameter = μ
-
-### Unconditional Behavior of S(t)
-
-- P(S(t) = 0) = exp(-λt)
-- For S(t) > 0, its density is a mixture of Gamma densities weighted by Poisson probabilities
-
-### Mean and Variance
-
-E[S(t)] = (λt) / μ  
-Var(S(t)) = (2λt) / μ²
-
-These results provide theoretical support for simulation outputs and help interpret plots generated in the application.
+The application enables interactive experimentation with parameter values, visual analysis of distributions, numerical summarization, and downloadable outputs.
 
 ---
 
-## Project Goals
+## Mathematical Derivation
 
-- Analyse the compound Poisson–Exponential system analytically
-- Simulate realizations of S(t) and compare with theory
-- Visualize histograms for different values of t
-- Construct an interactive visualization tool using Shiny
-- Observe how λ and μ influence the distribution of S(t)
-  
-Histograms are generated and compared for:
+### 1. Distribution of N(t)
+If interarrival times are exponentially distributed with rate λ, the resulting counting process follows:
 
-- t = 10  
-- t = 100  
-- t = 1000  
-- t = 10000
+N(t) ~ Poisson(λt)
 
-In addition, users can generate histograms at custom time points.
+Thus:
+
+P(N(t)=n) = exp(-λt) · (λt)ⁿ / n!
+
+### 2. Conditional Distribution of S(t)
+Given N(t)=n events occur up to time t:
+
+S(t) = X₁ + X₂ + ... + Xn
+
+Since each Xᵢ ~ Exponential(μ), their sum is Gamma distributed:
+
+S(t) | N(t)=n ~ Gamma(shape = n, rate = μ)
+
+Its density is:
+
+f(s|n) = μⁿ sⁿ⁻¹ exp(-μs) / (n-1)!   for s>0
+
+### 3. Unconditional Distribution of S(t)
+Since N(t) is random, S(t) is a **Poisson mixture of Gamma distributions**.
+
+P(S(t)=0) = P(N(t)=0) = exp(-λt)
+
+For s>0:
+
+f(s) = Σ (exp(-λt) (λt)ⁿ/n!) [μⁿ sⁿ⁻¹ exp(-μs)/(n-1)!], summed over n≥1
+
+Closed form exists but numerical simulation provides more intuitive insight.
+
+### 4. Moments
+
+E[N(t)] = λt  
+E[S(t)] = (λt)/μ  
+Var(S(t)) = (2λt)/μ²  
+
+These theoretical values are shown in the application alongside empirical simulation results.
 
 ---
 
-## Application Features
+## Features of the Shiny Application
 
-- Histogram visualization of simulated aggregate values S(t)
-- Predefined time plots + custom user-defined time input
-- Real-time simulation with adjustable parameters:
-  - Rate of arrivals (λ)
-  - Rate of jumps (μ)
-  - Total simulation count
-  - Time horizon
-- Sample path visualization for selected parameter sets
-- Parameter sensitivity analysis through interactive UI controls
-- Lightweight, responsive layout suitable for web deployment
+- Adjustable input parameters:
+  - Poisson arrival rate λ
+  - Exponential rate μ
+  - Simulation count
+  - Time horizon t
+  - Optional random seed for reproducibility
+- Drag-based collapsible control panel for clean visualization layout
+- Histogram with density curve overlay
+- Summary statistics including:
+  - Sample mean, variance, quantiles
+  - Theoretical E[N(t)] and E[S(t)]
+- Dynamic interpretive insights based on parameter magnitude
+- Export options:
+  - Simulation data as CSV
+  - Plot as PNG
 
 ---
 
-## How to Run
+## Insights from Simulation
 
-### Install Required Package
+| Parameter Change | Observed Effect |
+|------------------|-----------------|
+| Increasing λ      | More arrival events → larger cumulative value of S(t) |
+| Increasing μ      | Faster decay of exponential jumps → decreases S(t) |
+| Increasing t      | Both mean and spread of S(t) increase |
+| Small λt          | Right-skewed, often with mass near zero |
+| Large λt          | Distribution becomes smoother, closer to normality (CLT behaviour) |
+
+Key takeaway:  
+S(t) behaves like the total accumulated jump size over time. Larger λ or t increases accumulation frequency; μ determines individual jump size.
+
+---
+
+
+---
+
+## Installation Requirements
+
+Install required packages:
 
 ```r
-install.packages("shiny")
+install.packages(c("shiny", "shinyjqui", "shinyWidgets", "ggplot2"))
+
